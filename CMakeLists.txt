@@ -13,6 +13,12 @@ project(Hello VERSION 0.0.1 DESCRIPTION "Wireshark Hello Plugin" LANGUAGES C)
 
 find_package(Wireshark CONFIG REQUIRED)
 
+# Workaround: the imported epan target does not propagate GLib's include
+# directories, but Wireshark's public headers include <glib.h>.
+# Find GLib explicitly and link it below.
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GLIB2 REQUIRED IMPORTED_TARGET glib-2.0)
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 	set(CMAKE_INSTALL_PREFIX "${Wireshark_INSTALL_PREFIX}"
 		CACHE PATH "Installation prefix" FORCE
@@ -39,7 +45,7 @@ add_compile_definitions(
 
 add_library(hello MODULE hello.c)
 set_target_properties(hello PROPERTIES PREFIX "" DEFINE_SYMBOL "")
-target_link_libraries(hello epan)
+target_link_libraries(hello PRIVATE epan PkgConfig::GLIB2)
 
 # This is the normal installation target to CMAKE_INSTALL_PREFIX. It is relocatable
 # using DESTDIR or cmake --install. By default CMAKE_INSTALL_PREFIX should be configured
